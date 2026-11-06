@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f7f5">
+  <meta name="description" content="Watch hill climbing solve N-Queens and explore 2D and 3D function landscapes. Experiment with plateaus, local minima, and random restarts.">
+  <title>Hill Climbing Lab — See the search.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23157662'/%3E%3Cpath d='m8 28 10-16 6 9 4-5 6 12' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Hill Climbing Lab home"><span class="brand-icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="m5 24 9-15 6 9 4-6 5 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="7" r="2" fill="currentColor"/></svg></span><span>hillclimb<span class="brand-lab"> / lab</span></span></a>
+    <div class="header-right"><span class="header-label">SMALL STEPS. BETTER STATES.</span><button class="text-button" id="help-open"><span class="help-circle">?</span> How it works</button></div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow"><span></span> AN INTERACTIVE SEARCH PLAYGROUND</p><h1>See the search<span>.</span></h1><p class="intro-copy">Explore how a simple greedy choice finds a solution — or gets a little stuck.</p></div>
+      <div class="intro-tag"><svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="m3 22 6-7 5 3 5-10 6-3" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="15" r="2.5" fill="#f5f7f5" stroke="currentColor"/><circle cx="19" cy="8" r="2.5" fill="#f5f7f5" stroke="currentColor"/></svg><span>Learn by<br><strong>changing the next move.</strong></span></div>
+    </section>
+
+    <div class="workspace-nav"><div class="mode-tabs" role="tablist" aria-label="Visualization mode"><button role="tab" aria-selected="true" id="tab-queens" aria-controls="workspace" data-mode="queens"><span class="tab-icon">♛</span> N-Queens <span class="tab-number">01</span></button><button role="tab" aria-selected="false" id="tab-landscape" aria-controls="workspace" data-mode="landscape"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m2 15 5-9 4 6 3-4 4 7M2 17h16" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Function landscape <span class="tab-number">02</span></button></div><span class="workspace-caption">Steepest improvement · minimize cost</span></div>
+
+    <section class="workspace" id="workspace" role="tabpanel" aria-labelledby="tab-queens">
+      <aside class="control-panel panel">
+        <div class="panel-heading"><h2>Set up your search</h2><span class="tiny-label">CONFIGURE</span></div>
+        <div id="queens-controls">
+          <label for="board-size" class="field-label">Board size <span id="size-output">8 × 8</span></label>
+          <input id="board-size" type="range" min="4" max="16" value="8" step="1">
+          <div class="range-labels"><span>4 queens</span><span>16 queens</span></div>
+          <label class="field-label" for="preset">Starting position</label>
+          <select id="preset"><option value="random">Random board</option><option value="plateau">Plateau example · N = 8</option><option value="local">Local minimum · N = 8</option><option value="near">One move from a solution · N = 8</option></select>
+        </div>
+        <div id="landscape-controls" hidden>
+          <label class="field-label" for="function-select">Function landscape</label>
+          <select id="function-select"><option value="multiwell">Peaks & valleys</option><option value="bowl">Smooth bowl</option><option value="plateau">Terraced plateau</option><option value="rastrigin">Rastrigin</option></select>
+          <label class="field-label" for="step-size">Search step size</label>
+          <select id="step-size"><option value="0.1">0.10 · fine</option><option value="0.25" selected>0.25 · balanced</option><option value="0.5">0.50 · coarse</option><option value="1">1.00 · large</option></select>
+        </div>
+        <div class="seed-row"><label class="field-label" for="seed">Random seed</label><span class="micro">reproducible</span></div>
+        <div class="input-with-button"><input id="seed" value="31415" maxlength="24" aria-label="Random seed"><button id="shuffle-seed" title="Choose a different seed" aria-label="Choose a different random seed"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h3l8 10h3M14 12l3 3-3 3M3 15h3l3-4m2-3 3-3h3M14 2l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+        <div class="control-divider"></div>
+        <label class="switch-row" for="sideways"><span><strong>Allow sideways moves</strong><small>Explore an equal-cost neighbor</small></span><input id="sideways" class="switch" type="checkbox" checked></label>
+        <div class="inline-input"><label for="sideways-limit">Consecutive move limit</label><input id="sideways-limit" type="number" min="1" max="100" value="8"></div>
+        <label class="switch-row" for="auto-restart"><span><strong>Random restarts</strong><small>Try a fresh state when stuck</small></span><input id="auto-restart" class="switch" type="checkbox" checked></label>
+        <div class="inline-input"><label for="restart-limit">Maximum restarts</label><input id="restart-limit" type="number" min="0" max="100" value="20"></div>
+        <div class="control-divider"></div>
+        <label for="speed" class="field-label">Animation speed <span id="speed-output">2 steps / sec</span></label><input type="range" id="speed" min="1" max="10" value="2"><div class="range-labels"><span>Take it slow</span><span>Find it faster</span></div>
+        <div class="run-controls"><button id="run" class="primary-button"><span id="run-icon">▶</span><span id="run-label">Run search</span><kbd>space</kbd></button><button id="step" class="secondary-button" title="Take one step (right arrow)"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 3 6 5-6 5zM12 3v10" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Step</button></div>
+        <button class="reset-button" id="new-run"><span>↻</span> Reset search</button>
+      </aside>
+
+      <div class="visual-panel panel">
+        <div class="visual-header"><div><div class="title-line"><h2 id="visual-title">The chessboard</h2><span class="pill" id="board-pill">8 QUEENS</span></div><p id="visual-subtitle">One queen per column. No two queens should attack.</p></div><span class="status-pill" id="status-pill" role="status" aria-live="polite"><span></span> Ready</span></div>
+        <div class="visual-body">
+          <div class="stage-column">
+            <div class="board-wrap" id="board-wrap"><div class="rank-labels" id="rank-labels"></div><div id="board" class="board" aria-label="8 by 8 chessboard. Click a square to move the queen in that column."><div id="cells" class="cells"></div><svg class="attack-lines" id="attack-lines" aria-hidden="true"></svg><div id="pieces" class="pieces" aria-hidden="true"></div></div><div class="file-labels" id="file-labels"></div></div>
+            <div id="landscape-wrap" hidden><div class="landscape-toolbar"><div class="view-tabs" role="group" aria-label="Landscape view"><button id="view-2d" aria-pressed="false">2D contour</button><button id="view-3d" class="active" aria-pressed="true">3D surface</button></div><button id="reset-view" class="text-button small">Reset view ↺</button></div><canvas id="landscape" tabindex="0" role="img" aria-label="Interactive function landscape with search path. Drag the 3D view to rotate, or click the 2D view to choose a start."></canvas><div class="landscape-foot"><span id="canvas-hint">Drag to rotate the surface</span><label id="rotation-control">Rotate <input id="rotation" type="range" min="-180" max="180" value="-35" aria-label="Rotate 3D surface"></label></div><div class="formula" id="formula"></div></div>
+            <div class="board-toolbar" id="board-toolbar"><div class="legend"><span><i class="dot safe"></i>Safe queen</span><span><i class="dot conflict"></i>In conflict</span><span><i class="dot moved"></i>Last move</span></div><div class="board-options"><label><input type="checkbox" id="show-attacks" checked> Attack lines</label><label><input type="checkbox" id="show-costs"> Move costs</label></div></div>
+            <p class="canvas-help" id="edit-hint"><span>↳</span> Click any square to try your own starting board.</p>
+          </div>
+
+          <aside class="state-column">
+            <div class="cost-card"><span class="metric-label" id="cost-label">ATTACKING PAIRS</span><div class="cost-value"><strong id="cost">0</strong><span class="delta" id="delta">INITIAL</span></div><p id="cost-hint">The goal is zero.</p><div class="goal-track"><div id="goal-progress"></div></div><div class="goal-labels"><span id="best-label">Best so far: 0</span><span id="goal-label">goal: 0</span></div></div>
+            <div class="small-metrics"><div><span>Moves</span><strong id="iteration">0</strong></div><div><span>Restarts</span><strong id="restarts">0<span> / 20</span></strong></div><div><span>Sideways streak</span><strong id="sideways-count">0<span> / 8</span></strong></div><div><span>Evaluations</span><strong id="evaluations">1</strong></div></div>
+            <div class="decision-card" id="decision-card"><div class="decision-eyebrow"><span class="decision-dot"></span><span id="decision-type">YOUR NEXT MOVE</span></div><h3 id="decision-title">Ready to explore</h3><p id="decision-detail">Start the search or take it one step at a time.</p></div>
+            <button class="restart-button" id="manual-restart"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M16 8a6 6 0 1 0-1 6M16 3v5h-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Restart from a new state</button>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="details-grid">
+      <div class="progress-panel panel"><div class="panel-heading"><div><h2>Every step tells a story</h2><p>Cost over the search, including each fresh start.</p></div><span class="chart-key"><i></i> <span id="chart-label">Attacking pairs</span></span></div><div id="chart-container"><svg id="progress-chart" role="img" aria-label="Objective cost across search steps" viewBox="0 0 720 142" preserveAspectRatio="none"></svg></div><div class="replay-controls"><span id="replay-label">LIVE</span><input id="history" type="range" min="0" max="0" value="0" aria-label="Review recorded search states"><button id="return-live" class="text-button small">Back to latest</button><span id="history-count">State 1 of 1</span></div></div>
+      <div class="trace-panel panel"><div class="trace-tabs" role="tablist" aria-label="Search explanation"><button id="trace-tab" role="tab" aria-selected="true" aria-controls="trace-content">Search trace <span id="event-count">1</span></button><button id="code-tab" role="tab" aria-selected="false" aria-controls="code-content">The algorithm <span>↗</span></button></div><div id="trace-content" role="tabpanel" aria-labelledby="trace-tab"><ol id="trace-list"></ol></div><div id="code-content" role="tabpanel" aria-labelledby="code-tab" hidden><pre><code><span>01</span> current ← random state
+<span>02</span> <b>while</b> goal not reached:
+<span>03</span>   next ← lowest-cost neighbor
+<span>04</span>   <b>if</b> next is better: move
+<span>05</span>   <b>else if</b> equal & allowed:
+<span>06</span>     move sideways (up to limit)
+<span>07</span>   <b>else:</b> restart or stop</code></pre><p>Ties use the random seed. Restarts reset the sideways streak; an improving move resets it too.</p></div></div>
+    </section>
+
+    <section class="learning-strip"><span class="learning-mark">↗</span><div><strong>A greedy search, with a few escape routes.</strong><p>Better moves lower the cost. Sideways moves explore a plateau. Random restarts leave a stuck search behind.</p></div><button class="text-button" id="help-bottom">Explore the idea <span>↗</span></button></section>
+    <footer><span>Hill Climbing Lab <span class="footer-divider">/</span> An experiment in local search</span><span>Built for curiosity. Runs in your browser.</span></footer>
+  </main>
+
+  <dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">THE IDEA IN A MINUTE</span><button id="help-close" aria-label="Close explanation">×</button></div><h2>Always take the better step.</h2><p>Hill climbing keeps one current state, scores its neighbors, and greedily picks a better one. This lab minimizes a cost, which is equivalent to climbing the fitness <strong>−cost</strong>.</p><div class="help-item"><span class="help-number">01</span><div><h3>Move toward a lower cost</h3><p>For N-Queens, one move places a single queen in another row of the same column. We check all N(N − 1) neighbors and count each attacking pair once. Zero means solved.</p></div></div><div class="help-item"><span class="help-number">02</span><div><h3>Meet a plateau or local minimum</h3><p>A plateau has equal-cost neighbors. A strict local minimum has only worse neighbors. A bounded number of sideways moves can explore a plateau, but may still cycle or get stuck.</p></div></div><div class="help-item"><span class="help-number">03</span><div><h3>Give the search a fresh start</h3><p>When no move is allowed, the search shows why it is stuck. With random restarts enabled, the next step starts a new attempt. The best state is remembered, and the restart budget bounds the run.</p></div></div><div class="help-note"><strong>About the landscape</strong><p>2D and 3D show the same function of x and y. Search evaluates up to eight neighboring points inside [−3, 3]². A neighborhood minimum depends on the step size; it does not prove a continuous or global minimum. The smooth bowl, terraces and Rastrigin have a known global minimum of 0.</p></div><p class="keyboard-note"><kbd>space</kbd> play / pause <kbd>→</kbd> single step · Change any search setting to begin a new run.</p><button id="help-done" class="primary-button">Let’s explore <span>↗</span></button></dialog>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
